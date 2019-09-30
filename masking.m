@@ -27,7 +27,7 @@ blue   = [0 0 255];
 ResPath_sc = '.\sc_testResults';
 ResPath    = 'Results';
 
-subject = num2str(input('Subject:  '));
+subject = input('Subject ID: ' ,'s');
                                        
 % Open an on screen window and color it grey
 [w, winRect] = Screen('OpenWindow', 0, grey);
@@ -73,7 +73,7 @@ Rect_brd = OffsetRect(Rect_tll, 5*30,5*50);
 
 
 
-DrawFormattedText(w, 'This is the beginning.', 'center', 'center' , black) ;
+DrawFormattedText(w, 'This is the beginning of staircase procedure, press space to start.', 'center', 'center' , black) ;
 Screen('Flip', w) ;
 
         press = true;
@@ -88,6 +88,21 @@ Screen('Flip', w) ;
         Screen('FillRect', w, grey);
         Screen('Flip', w);
         
+DrawFormattedText(w, 'Press 1 if you saw the target, press 0 if you did not.', 'center', 'center' , black) ;
+Screen('Flip', w) ;
+
+        press = true;
+        while press
+            [~, keyCode, ~] = KbWait;
+            pressedKey = KbName(keyCode) ;
+            if  strcmpi(pressedKey, 'space') == 1
+                press = false;
+            end  
+        end
+        
+        Screen('FillRect', w, grey);
+        Screen('Flip', w);   
+        WaitSecs(0.2);
         
 %% Staircase initilization
 
@@ -399,6 +414,28 @@ WaitSecs(0.1);
         Screen('FillRect', w, grey);
         Screen('Flip', w);
         
+        
+message_practice = ['Place your left hand on the space bar and right hand on the number pad on the right.\n'...
+                     '\n'...
+                     '\n'...
+                     'Press the space bar 1 second after you hear the tone, and use the number pad to indicate the target number.'];
+                 
+DrawFormattedText(w, message_practice, 'center', 'center' , black) ;
+Screen('Flip', w) ;
+WaitSecs(0.1);
+
+        press = true;
+        while press
+            [~, keyCode, ~] = KbWait;
+            pressedKey = KbName(keyCode) ;
+            if  strcmpi(pressedKey, 'space') == 1
+                press = false;
+            end  
+        end
+        
+        Screen('FillRect', w, grey);
+        Screen('Flip', w);        
+        
 
 %%%%%%%%%%
 Target2Mask = sc_results.threshold;  % should obtain from staircase procedure
@@ -589,6 +626,7 @@ else
 end
 
         Screen('FillRect', w, grey);
+        DrawFormattedText(w, '+', 'center', 'center' , black);
         Screen('Flip', w);
         WaitSecs(1);
     
@@ -636,7 +674,7 @@ stim_onset = linspace(Beep2Target-0.5,Beep2Target+1,1.5/0.05+1);  % 50ms increme
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nBlocks = 1;
+nBlocks = 5;
 nTrials = size(stim_onset,2)*3;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -674,20 +712,7 @@ end
 
 for i = 1:nBlocks
     
-    % Break
-    DrawFormattedText(w, 'Take a break.', 'center', 'center' , black) ;
-    Screen('Flip', w) ;
 
-        press = true;
-        while press
-            [~, keyCode, ~] = KbWait;
-            pressedKey = KbName(keyCode) ;
-            if  strcmpi(pressedKey, 'space') == 1
-                press = false;
-            end  
-        end
-        
-        
     
     for ii = 1:nTrials
         Screen('TextSize', w, 30);
@@ -875,12 +900,32 @@ filename = sprintf('%s%c%s_%s.mat', ResPath, filesep, date, subject);
 
 save(filename);
 
+
+
+    % Break
+    DrawFormattedText(w, 'Take a break.', 'center', 'center' , black) ;
+    Screen('Flip', w) ;
+    WaitSecs(0.1);
+
+        press_break = true;
+        while press_break
+            [~, keyCode, ~] = KbWait;
+            pressedKey = KbName(keyCode) ;
+            if  strcmpi(pressedKey, 'space') == 1
+                press_break = false;
+            end  
+        end
+        
+        
+        
+        
+
 end
 
 %--------------------------------------------------------------------------
 
 
-DrawFormattedText(w, 'This is the end.', 'center', 'center' , black) ;
+DrawFormattedText(w, 'Complete.', 'center', 'center' , black) ;
 Screen('Flip', w) ;
 
         press = true;
