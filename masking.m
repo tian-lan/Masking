@@ -25,7 +25,7 @@ green  = [0 255 0];
 blue   = [0 0 255];
 
 ResPath_sc = '.\sc_testResults';
-ResPath    = 'Results';
+ResPath    = '.\Results';
 
 subject = input('Subject ID: ' ,'s');
                                        
@@ -88,8 +88,9 @@ Screen('Flip', w) ;
         Screen('FillRect', w, grey);
         Screen('Flip', w);
         
-DrawFormattedText(w, 'Press 1 if you saw the target, press 0 if you did not.', 'center', 'center' , black) ;
+DrawFormattedText(w, 'Use number pad on the right to indicate the target number.', 'center', 'center' , black) ;
 Screen('Flip', w) ;
+WaitSecs(0.2);
 
         press = true;
         while press
@@ -119,6 +120,7 @@ sc_design.StairOrder = sc_design.StairOrder(randperm(size(sc_design.StairOrder,2
 
 sc_design.Targets   = zeros(1,sc_design.nTrials);
 sc_design.TargetLoc = zeros(1,sc_design.nTrials);
+sc_design.acc       = zeros(1,sc_design.nTrials);
 
 for i = 1:size(sc_design.Targets,2)
     sc_design.Targets(1,i) = randi(10);
@@ -132,7 +134,7 @@ end  % Generate target location vector for all trials
 
 
 sc_results.intensity = nan(2,sc_design.nTrials);
-sc_results.response  = nan(2,sc_design.nTrials);
+sc_results.response  = cell(2,sc_design.nTrials);
 
 % %this parameter keeps track of the number of correct responses in a row
 % correctInaRow1 = 0;  % counter for stair 1
@@ -274,8 +276,8 @@ WaitSecs(0.5*rand(1)+1.5);
         Screen('Flip', w) ;
         WaitSecs(0.3);
         
-%         DrawFormattedText(w, 'Did you see the target?', 'center', 'center', black) ;
-        Screen('FillRect', w, grey);
+        DrawFormattedText(w, 'What was the target?', 'center', 'center', black) ;
+%         Screen('FillRect', w, grey);
         Screen('Flip', w) ;
         
         
@@ -284,10 +286,16 @@ WaitSecs(0.5*rand(1)+1.5);
         while press
             [~, keyCode, ~] = KbWait;
             pressedKey = KbName(keyCode) ;
-            if  strcmpi(pressedKey, '1!') == 1||strcmpi(pressedKey, '0)') == 1
+            if  strcmpi(pressedKey, '1') == 1||strcmpi(pressedKey, '2') == 1||strcmpi(pressedKey, '3') == 1||strcmpi(pressedKey, '4') == 1||strcmpi(pressedKey, '5') == 1||strcmpi(pressedKey, '6') == 1||strcmpi(pressedKey, '7') == 1||strcmpi(pressedKey, '8') == 1||strcmpi(pressedKey, '9') == 1||strcmpi(pressedKey, '0') == 1
                 press = false;
             end
             
+        end
+        
+        if strcmpi(pressedKey, num2str(sc_design.Targets(1,i))) == 1
+            sc_design.acc(1,i) = 1;
+        else
+            sc_design.acc(1,i) = 0;
         end
 
         
@@ -302,9 +310,9 @@ WaitSecs(0.5*rand(1)+1.5);
         end
         
         
-        if strcmpi(pressedKey, '1!') == 1  % if pressing 1
+        if sc_design.acc(1,i) == 1  % if pressing 1
             if sc_design.StairOrder(i) == 1
-                sc_results.response(1,i) = 1;
+                sc_results.response{1,i} = pressedKey;
                 
                 if nRefresh1 == 1
                         nRefresh1 = nRefresh1 + CurrentStepsize1;
@@ -317,8 +325,8 @@ WaitSecs(0.5*rand(1)+1.5);
                  
                 
             else  % stair 2
-                sc_results.response(2,i) = 1;
-                idx = find(sc_results.response(2,:) == 1);
+                sc_results.response{2,i} = pressedKey;
+%                 idx = find(sc_results.response{2,:} == 1);
                 
                 if nRefresh2 == 1
                         nRefresh2 = nRefresh2 + CurrentStepsize2;
@@ -332,12 +340,12 @@ WaitSecs(0.5*rand(1)+1.5);
             
         else                 % if pressing 0
             if sc_design.StairOrder(i) == 1
-                sc_results.response(1,i) = 0;
+                sc_results.response{1,i} = pressedKey;
                 nRefresh1 = nRefresh1 + CurrentStepsize1;
                 CurrentStepsize1 = ceil(CurrentStepsize1/2);
 
             else
-                sc_results.response(2,i) = 0;
+                sc_results.response{2,i} = pressedKey;
                 nRefresh2 = nRefresh2 + CurrentStepsize2;
                 CurrentStepsize2 = ceil(CurrentStepsize2/2);
 
@@ -363,20 +371,20 @@ Screen('Flip', w) ;
 
         
 
-sc_results.ResponseHigh2Low = sc_results.response(1,:);
+sc_results.ResponseHigh2Low = sc_design.acc(sc_design.StairOrder==1);
 sc_results.ResponseHigh2Low = sc_results.ResponseHigh2Low(~isnan(sc_results.ResponseHigh2Low));
 
 sc_results.IntensityHigh2Low = sc_results.intensity(1,:);
 sc_results.IntensityHigh2Low = sc_results.IntensityHigh2Low(~isnan(sc_results.IntensityHigh2Low));
 
-sc_results.ResponseLow2High = sc_results.response(2,:);
+sc_results.ResponseLow2High = sc_design.acc(sc_design.StairOrder==2);
 sc_results.ResponseLow2High = sc_results.ResponseLow2High(~isnan(sc_results.ResponseLow2High));
 
 sc_results.IntensityLow2High = sc_results.intensity(2,:);
 sc_results.IntensityLow2High = sc_results.IntensityLow2High(~isnan(sc_results.IntensityLow2High));
 
-sc_results.High2Low_Last10 = sc_results.IntensityHigh2Low(find(sc_results.ResponseHigh2Low==1,10,'last'));
-sc_results.Low2High_Last10 = sc_results.IntensityLow2High(find(sc_results.ResponseLow2High==1,10,'last'));
+sc_results.High2Low_Last10 = sc_results.IntensityHigh2Low(find(sc_results.ResponseHigh2Low,10,'last'));
+sc_results.Low2High_Last10 = sc_results.IntensityLow2High(find(sc_results.ResponseLow2High,10,'last'));
 
 threshold_mean_High2Low = mean(sc_results.High2Low_Last10);
 threshold_mean_Low2High = mean(sc_results.Low2High_Last10);
@@ -722,7 +730,7 @@ for i = 1:nBlocks
         Screen('Flip', w) ;
 
         
-        t_gotone(i*ii) = GetSecs;
+        t_gotone((i-1)*nTrials+ii) = GetSecs;
         
         
         KbQueueCreate; %creates cue using defaults
@@ -735,7 +743,7 @@ for i = 1:nBlocks
             wait = true;
             while wait
                 CurrentTime = GetSecs;
-                if CurrentTime - t_gotone(i*ii) > stim_onset(i*ii) % Once passing stim-onset time
+                if CurrentTime - t_gotone((i-1)*nTrials+ii) > stim_onset((i-1)*nTrials+ii) % Once passing stim-onset time
                     
 %                     for nRefresh = 1:Target2Mask
 %                         DrawFormattedText(w, num2str(Targets_practice(1,i)), 'center', 'center' , black);
@@ -747,36 +755,36 @@ for i = 1:nBlocks
             end
             
             
-    if TargetLoc(1,i*ii) == 1
+    if TargetLoc(1,(i-1)*nTrials+ii) == 1
         for n = 1:Target2Mask % display target
-            DrawFormattedText(w, num2str(Targets(1,i*ii)), xCenter-70, yCenter-50, black) ;
+            DrawFormattedText(w, num2str(Targets(1,(i-1)*nTrials+ii)), xCenter-70, yCenter-50, black) ;
             DrawFormattedText(w, '*', xCenter+50, yCenter-70, black) ;
             DrawFormattedText(w, '*', xCenter-70, yCenter+110, black) ;
             DrawFormattedText(w, '*', xCenter+30*2, yCenter+110, black) ;
             Screen('Flip', w) ;
         end
              
-    elseif TargetLoc(1,i*ii) == 2
+    elseif TargetLoc(1,(i-1)*nTrials+ii) == 2
         for n = 1:Target2Mask % display target
-            DrawFormattedText(w, num2str(Targets(1,i*ii)), xCenter+50, yCenter-50, black) ;
+            DrawFormattedText(w, num2str(Targets(1,(i-1)*nTrials+ii)), xCenter+50, yCenter-50, black) ;
             DrawFormattedText(w, '*', xCenter-70, yCenter-70, black) ;
             DrawFormattedText(w, '*', xCenter-70, yCenter+110, black) ;
             DrawFormattedText(w, '*', xCenter+50, yCenter+110, black) ;
             Screen('Flip', w) ;
         end
                 
-    elseif TargetLoc(1,i*ii) == 3
+    elseif TargetLoc(1,(i-1)*nTrials+ii) == 3
         for n = 1:Target2Mask % display target
-            DrawFormattedText(w, num2str(Targets(1,i*ii)),  xCenter-70, yCenter+110, black) ;
+            DrawFormattedText(w, num2str(Targets(1,(i-1)*nTrials+ii)),  xCenter-70, yCenter+110, black) ;
             DrawFormattedText(w, '*', xCenter-70, yCenter-70, black) ;
             DrawFormattedText(w, '*', xCenter+50, yCenter-70, black) ;
             DrawFormattedText(w, '*', xCenter+50, yCenter+110, black) ;
             Screen('Flip', w) ;
         end
         
-    elseif TargetLoc(1,i*ii) == 4
+    elseif TargetLoc(1,(i-1)*nTrials+ii) == 4
         for n = 1:Target2Mask % display target
-            DrawFormattedText(w, num2str(Targets(1,i*ii)), xCenter+50, yCenter+110, black) ;
+            DrawFormattedText(w, num2str(Targets(1,(i-1)*nTrials+ii)), xCenter+50, yCenter+110, black) ;
             DrawFormattedText(w, '*', xCenter+50, yCenter-70, black) ;
             DrawFormattedText(w, '*', xCenter-70, yCenter-70, black) ;
             DrawFormattedText(w, '*', xCenter-70, yCenter+110, black) ;
@@ -815,18 +823,18 @@ for i = 1:nBlocks
                 wait2 = true;
                 while wait2
                     bb = GetSecs;
-                    if bb - t_gotone(i*ii) > 2
+                    if bb - t_gotone((i-1)*nTrials+ii) > 2
                        [pressed, firstPress, ~, lastPress, ~]=KbQueueCheck; %  check if any key was pressed.
                        if pressed
                           firstPress(firstPress==0)=NaN; %little trick to get rid of 0s
                           [endtime, Index]=min(firstPress);
-                          t_res(i*ii) = endtime;
+                          t_res((i-1)*nTrials+ii) = endtime;
 
                           wait2 = false;
                           press_main = false;
                 
                        else
-                          t_res(i*ii) = nan;
+                          t_res((i-1)*nTrials+ii) = nan;
                           wait2 = false;
                           press_main = false;
                        end
@@ -841,7 +849,7 @@ while press
     pressedKey = KbName(keyCode);
     if  strcmpi(pressedKey, '1') == 1||strcmpi(pressedKey, '2') == 1||strcmpi(pressedKey, '3') == 1||strcmpi(pressedKey, '4') == 1||strcmpi(pressedKey, '5') == 1||strcmpi(pressedKey, '6') == 1||strcmpi(pressedKey, '7') == 1||strcmpi(pressedKey, '8') == 1||strcmpi(pressedKey, '9') == 1||strcmpi(pressedKey, '0') == 1
         press = false;
-        choice{1,i*ii} = pressedKey;
+        choice{1,(i-1)*nTrials+ii} = pressedKey;
     end
     
 end
@@ -850,16 +858,16 @@ end
     
     Screen('Flip', w) ;
 
-if strcmpi(pressedKey, num2str(Targets(i*ii))) == 1
-    acc(1,i*ii) = 1;
+if strcmpi(pressedKey, num2str(Targets((i-1)*nTrials+ii))) == 1
+    acc(1,(i-1)*nTrials+ii) = 1;
 else
-    acc(1,i*ii) = 0;
+    acc(1,(i-1)*nTrials+ii) = 0;
 end
 
-if ~isempty(t_res(i*ii))&&~isnan(t_res(i*ii))
-    RT(1,i*ii) = t_res(i*ii) - t_gotone(i*ii);
+if ~isempty(t_res((i-1)*nTrials+ii))&&~isnan(t_res((i-1)*nTrials+ii))
+    RT(1,(i-1)*nTrials+ii) = t_res((i-1)*nTrials+ii) - t_gotone((i-1)*nTrials+ii);
 else
-    RT(1,i*ii) = nan;
+    RT(1,(i-1)*nTrials+ii) = nan;
     Screen('TextSize', w, 48);
     DrawFormattedText(w, 'Please press within 2 seconds after the beep.', 'center', 'center' , black);
     Screen('Flip', w) ;
@@ -884,7 +892,7 @@ end
     Results.RT         = RT;
     Results.threshold  = Target2Mask;
     Results.MeanRT     = Beep2Target;
-    Results.stim_onset = stim_onset - Beep2Target;
+    Results.stim_onset = stim_onset;
     Results.Targets    = Targets;
     Results.TargetLoc  = TargetLoc;
     
@@ -903,9 +911,11 @@ save(filename);
 
 
     % Break
-    DrawFormattedText(w, 'Take a break.', 'center', 'center' , black) ;
-    Screen('Flip', w) ;
-    WaitSecs(0.1);
+    if i<5
+        DrawFormattedText(w, 'Take a break.', 'center', 'center' , black) ;
+        Screen('Flip', w) ;
+        WaitSecs(0.1);
+    end
 
         press_break = true;
         while press_break
